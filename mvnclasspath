@@ -5,7 +5,7 @@ require 'fileutils'
 
 class MvnClassPath
   def initialize
-    cacheKey = URI.escape(File.absolute_path(Dir.pwd))
+    cacheKey = URI.escape(File.absolute_path(Dir.pwd), ':/\\')
     @cachepath = "#{Dir.home}/.mvnclasspath/#{cacheKey}"
   end
 
@@ -28,7 +28,7 @@ class MvnClassPath
   end
 
   def generateByMaven()
-    cp = `mvn dependency:build-classpath -DincludeScope=test | grep -A 1 'Dependencies classpath:'`.split(/\n/)[-1]
+    cp = `mvn dependency:build-classpath -DincludeScope=test | grep -A 1 "Dependencies classpath:"`.split(/\n/)[-1]
     FileUtils.mkdir_p(File.dirname(@cachepath))
     File.write(@cachepath, cp)
     return cp
