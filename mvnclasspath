@@ -1,0 +1,38 @@
+#!/usr/bin/env ruby
+
+require 'uri'
+require 'fileutils'
+
+class MvnClassPath
+  def initialize
+    cacheKey = URI.escape(File.absolute_path(Dir.pwd))
+    @cachepath = "#{Dir.home}/.mvnclasspath/#{cacheKey}"
+  end
+
+  def getClassPath
+    if File.exists?('pom.xml')
+    # generate cache file path.
+      if File.exists?(@cachepath)
+        if File.mtime(@cachepath) >= File.mtime('pom.xml')
+          # cache hit.
+          return IO.read(@cachepath)
+        else
+          return generateByMaven()
+        end
+      else
+        return generateByMaven()
+      end
+    else
+      return '.'
+    end
+  end
+
+  def generateByMaven()
+    cp = `mvn dependency:build-classpath -DincludeScope=test | grep -A 1 'Dependencies classpath:'`.split(/\n/)[-1]
+    FileUtils.mkdir_p(File.dirname(@cachepath))
+    File.write(@cachepath, cp)
+    return cp
+  end
+end
+
+puts MvnClassPath.new.getClassPath()
